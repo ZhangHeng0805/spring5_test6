@@ -184,3 +184,87 @@
             }
         }
 
+## Spring5框架新功能
+   ### 1、整个Spring5框架的代码基于Java8，运行时兼容JDK9，许多不建议使用的类和方法在代码库中删除
+   ### 2、Spring5框架自带通用的日志封装
+        （1）Spring5已经移除了Log4jConfigListener，官方建议使用Log4j2
+        （2）Spring5框架整合Log4j2
+            第一步 引入jar包
+                log4j-api-2.11.2.jar
+                log4j-core-2.11.2.jar
+                log4j-slf4j-impl-2.11.2.jar
+                slf4j-api-1.7.30.jar
+            第二步 创建log4j2.xml配置文件
+                <?xml version="1.0" encoding="UTF-8"?>
+                <!--日志优先级：OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
+                <!--Configuration后面的status用于设置log4j2自身内部的信息输出，可以不设置，当设置为trace时，可以看到log4j2内部各种详细输出-->
+                <Configuration status="INFO">
+                    <!--先定义所有的appenders-->
+                    <Appenders>
+                        <!--输出日志信息到控制台-->
+                        <Console name="Console" target="SYSTEM_OUT">
+                            <!--控制日志输出格式-->
+                            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+                        </Console>
+                    </Appenders>
+                    <!--然后定义logger,只有定义了logger并引入的appender才会生效-->
+                    <!--root：用于指定项目的根目录，如果没有单独指定logger，则会使用root作为默认的日志输出-->
+                    <Loggers>
+                        <Root level="info">
+                            <AppenderRef ref="Console"/>
+                        </Root>
+                    </Loggers>
+                </Configuration>
+   ### 3、Spring5框架核心容器支持@Nullable注解
+        （1）@Nullable注解可以使用在方法上面，属性上面，参数上面，表示方法返回值可以为空，属性值可以为空
+   ### 4、Spring5核心容器支持函数式风格GenericApplicationContext
+        @Test//函数式风格创建对象，交给spring进行管理
+            public void testGenericApplicationContext(){
+                //创建GenericApplicationContext对象
+                GenericApplicationContext context=new GenericApplicationContext();
+                //调用context的方法对象注册
+                context.refresh();
+                context.registerBean("user1",User.class,() ->new User());
+                //获取在spring注册的对象
+        //        User user = (User) context.getBean("zh.spring5.test.User");
+                User user = (User) context.getBean("user1");
+                System.out.println(user);
+            }
+   ### 5、Spring5支持整合JUnit5（测试方面）
+        （1）整合JUnit4
+            第一步 引入Spring相关针对测试依赖
+                spring-test-5.2.6.RELEASE.jar
+                JUnit4库
+            第二步 创建测试类，使用注解方式完成
+                @RunWith(SpringJUnit4ClassRunner.class)//指定单元测试框架
+                @ContextConfiguration("classpath:bean1.xml")//加载配置文件
+                public class JTest4 {
+                    @Autowired
+                    private UserService userService;
+                    @Test//使用的是import org.junit.Test;
+                    public void test1(){
+                        userService.accountMoney();
+                    }
+                }
+        （2）Spring5整合JUnit5
+            第一步 引入JUnit5的依赖（JUnit5.3）
+                @ExtendWith(SpringExtension.class)
+                @ContextConfiguration("classpath:bean1.xml")
+                public class JTest5 {
+                    @Autowired
+                    private UserService userService;
+                    @Test//使用的是import org.junit.jupiter.api.Test;
+                    public void test1(){
+                        userService.accountMoney();
+                    }
+                }
+        （3）使用复合注解代替上面两个注解完成整合
+            @SpringJUnitConfig(locations = "classpath:bean1.xml")
+            public class JTest5 {
+                @Autowired
+                private UserService userService;
+                @Test
+                public void test1(){
+                    userService.accountMoney();
+                }
+            }
